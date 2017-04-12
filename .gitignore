@@ -1,0 +1,79 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# povray
+*.pov
+err
+
+bin/veevee
+*.ply
+*.chg
+
+.DS_Store
+/*.png
+obj/*
+bin/
+
+# do not store pre-generated character maps
+assets/fonts/*.png
+
+.vs
+
+# Visual C++ cache files
+ipch/
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# screenshots
+screenshots/*.png
+
+# Doxygen
+doc/*
+!doc/empty
+.DS_Store
+out.log
+/OUTCAR*
+/POSCAR*
+build/*
+*.zip
