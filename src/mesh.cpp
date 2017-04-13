@@ -26,3 +26,11 @@ void Mesh::add_vertex_pn(unsigned int idx, const glm::vec3& pos, const glm::vec3
     this->vertices.push_back(pos);
     this->normals.push_back(normal);
 }
+
+void Mesh::add_content(const std::vector<glm::vec3>& _vertices,
+                       const std::vector<glm::vec3>& _normals,
+                       const std::vector<unsigned int>& _indices) {
+    this->indices = _indices;
+    this->vertices = _vertices;
+    this->normals = _normals;
+}

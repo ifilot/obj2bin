@@ -54,7 +54,8 @@ set (BOOST_ALL_DYN_LINK OFF)
 
 # Include libraries
 find_package(PkgConfig REQUIRED)
-find_package(Boost COMPONENTS chrono regex system serialization filesystem log thread REQUIRED)
+find_package(BZip2 REQUIRED)
+find_package(Boost COMPONENTS chrono regex iostreams system serialization filesystem log thread REQUIRED)
 
 # Set include folders
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
@@ -78,7 +79,7 @@ if(APPLE)
     SET(CMAKE_EXE_LINKER_FLAGS "-L${GLEW_LIBRARY_DIRS}")
     target_link_libraries(obj2bit ${Boost_LIBRARIES})
 else()
-    target_link_libraries(obj2bit ${Boost_LIBRARIES})
+    target_link_libraries(obj2bit ${Boost_LIBRARIES} ${BZIP2_LIBRARIES})
 endif()
 
 # add Boost definition

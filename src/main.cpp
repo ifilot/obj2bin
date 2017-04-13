@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     Mesh mesh;
     mp.read_obj(argv[1], &mesh);
 
-    std::cout << mesh.get_nr_vertices() << std::endl;
-
     mp.write_bin("test.bin", &mesh);
+    mp.write_bz2("test.bz2", &mesh);
+    mp.read_bz2("test.bz2", &mesh);
 }

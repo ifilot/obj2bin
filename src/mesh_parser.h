@@ -19,6 +19,9 @@
  *                                                                        *
  **************************************************************************/
 
+#ifndef _MESH_PARSER_H
+#define _MESH_PARSER_H
+
 #include <string>
 #include <stdexcept>
 #include <fstream>
@@ -28,6 +31,9 @@
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/bzip2.hpp>
 
 #include "mesh.h"
 
@@ -41,6 +47,28 @@ public:
 
     void write_bin(const std::string& filename, const Mesh* mesh);
 
+    void write_bz2(const std::string& filename, const Mesh* mesh);
+
+    Mesh* read_bz2(const std::string& filename, Mesh* mesh);
+
 private:
 
 };
+
+// define comparison function for glm::vec3
+static uint8_t comp_vec3(const glm::vec3& lhs, float x, float y, float z) {
+    uint8_t result = 0;
+    if(lhs.x > x) {
+        result |= (1 << 0);
+    }
+    if(lhs.y > y) {
+        result |= (1 << 1);
+    }
+    if(lhs.z > z) {
+        result |= (1 << 2);
+    }
+
+    return result;
+}
+
+#endif //_MESH_PARSER_H

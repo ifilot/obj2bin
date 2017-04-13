@@ -19,6 +19,9 @@
  *                                                                        *
  **************************************************************************/
 
+#ifndef _MESH_H
+#define _MESH_H
+
 #include <vector>
 
 #define GLM_FORCE_RADIANS
@@ -35,6 +38,10 @@ public:
     Mesh() {}
 
     void add_vertex_pn(uint32_t idx, const glm::vec3& pos, const glm::vec3& normal);
+
+    void add_content(const std::vector<glm::vec3>& _vertices,
+                     const std::vector<glm::vec3>& _normals,
+                     const std::vector<unsigned int>& _indices);
 
     inline unsigned int get_nr_vertices() const {
         return this->vertices.size();
@@ -56,3 +63,5 @@ public:
 
 private:
 };
+
+#endif //_MESH_H
