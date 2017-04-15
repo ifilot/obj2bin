@@ -1,5 +1,5 @@
 /**************************************************************************
- *   mesh_parser.h  --  This file is part of OBJ2BIT.                     *
+ *   mesh_base.h  --  This file is part of OBJ2BIT.                       *
  *                                                                        *
  *   Copyright (C) 2017, Ivo Filot (ivo@ivofilot.nl)                      *
  *                                                                        *
@@ -19,58 +19,61 @@
  *                                                                        *
  **************************************************************************/
 
-#ifndef _MESH_PARSER_H
-#define _MESH_PARSER_H
+#ifndef _MESH_BASE
+#define _MESH_BASE
 
-#include <string>
-#include <stdexcept>
-#include <fstream>
-#include <iostream>
+#include <vector>
 
-#include <boost/format.hpp>
-#include <boost/regex.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/iostreams/filtering_streambuf.hpp>
-#include <boost/iostreams/copy.hpp>
-#include <boost/iostreams/filter/bzip2.hpp>
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
 
-#include "mesh_base.h"
-#include "mesh_simple.h"
-#include "mesh_uv.h"
-
-class MeshParser {
-private:
+class MeshBase {
+protected:
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec3> normals;
+    std::vector<uint32_t> indices;
+    unsigned int type;
 
 public:
-    MeshParser() {}
+    MeshBase();
 
-    MeshBase* read_obj(const std::string& filename);
+    enum {
+        MESH_BASE,
+        MESH_SIMPLE,
+        MESH_UV,
+        MESH_COLORED
+    };
 
-    void write_bin(const std::string& filename, const MeshBase*);
+    virtual void add_vertex_pn(uint32_t idx, const glm::vec3& pos, const glm::vec3& normal);
 
-    void write_bz2(const std::string& filename, const MeshBase*);
+    virtual void add_content(const std::vector<glm::vec3>& _vertices,
+                     const std::vector<glm::vec3>& _normals,
+                     const std::vector<unsigned int>& _indices);
 
-    MeshBase* read_bz2(const std::string& filename);
+    inline virtual unsigned int get_nr_vertices() const {
+        return this->vertices.size();
+    }
 
-private:
+    inline virtual const std::vector<glm::vec3>& get_vertices() const {
+        return this->vertices;
+    }
 
+    inline virtual const std::vector<glm::vec3>& get_normals() const {
+        return this->normals;
+    }
+
+    inline virtual const std::vector<uint32_t>& get_indices() const {
+        return this->indices;
+    }
+
+    inline unsigned int get_type() const {
+        return this->type;
+    }
+
+    ~MeshBase() {}
+
+protected:
 };
 
-// define comparison function for glm::vec3
-static uint8_t comp_vec3(const glm::vec3& lhs, float x, float y, float z) {
-    uint8_t result = 0;
-    if(lhs.x > x) {
-        result |= (1 << 0);
-    }
-    if(lhs.y > y) {
-        result |= (1 << 1);
-    }
-    if(lhs.z > z) {
-        result |= (1 << 2);
-    }
-
-    return result;
-}
-
-#endif //_MESH_PARSER_H
+#endif //_MESH_BASE

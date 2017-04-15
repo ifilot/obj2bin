@@ -1,5 +1,5 @@
 /**************************************************************************
- *   mesh_parser.h  --  This file is part of OBJ2BIT.                     *
+ *   mesh_base.cpp  --  This file is part of OBJ2BIT.                     *
  *                                                                        *
  *   Copyright (C) 2017, Ivo Filot (ivo@ivofilot.nl)                      *
  *                                                                        *
@@ -19,58 +19,22 @@
  *                                                                        *
  **************************************************************************/
 
-#ifndef _MESH_PARSER_H
-#define _MESH_PARSER_H
-
-#include <string>
-#include <stdexcept>
-#include <fstream>
-#include <iostream>
-
-#include <boost/format.hpp>
-#include <boost/regex.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/iostreams/filtering_streambuf.hpp>
-#include <boost/iostreams/copy.hpp>
-#include <boost/iostreams/filter/bzip2.hpp>
-
 #include "mesh_base.h"
-#include "mesh_simple.h"
-#include "mesh_uv.h"
 
-class MeshParser {
-private:
-
-public:
-    MeshParser() {}
-
-    MeshBase* read_obj(const std::string& filename);
-
-    void write_bin(const std::string& filename, const MeshBase*);
-
-    void write_bz2(const std::string& filename, const MeshBase*);
-
-    MeshBase* read_bz2(const std::string& filename);
-
-private:
-
-};
-
-// define comparison function for glm::vec3
-static uint8_t comp_vec3(const glm::vec3& lhs, float x, float y, float z) {
-    uint8_t result = 0;
-    if(lhs.x > x) {
-        result |= (1 << 0);
-    }
-    if(lhs.y > y) {
-        result |= (1 << 1);
-    }
-    if(lhs.z > z) {
-        result |= (1 << 2);
-    }
-
-    return result;
+MeshBase::MeshBase() {
+    this->type = MESH_BASE;
 }
 
-#endif //_MESH_PARSER_H
+void MeshBase::add_vertex_pn(unsigned int idx, const glm::vec3& pos, const glm::vec3& normal) {
+    this->indices.push_back(idx);
+    this->vertices.push_back(pos);
+    this->normals.push_back(normal);
+}
+
+void MeshBase::add_content(const std::vector<glm::vec3>& _vertices,
+                       const std::vector<glm::vec3>& _normals,
+                       const std::vector<unsigned int>& _indices) {
+    this->indices = _indices;
+    this->vertices = _vertices;
+    this->normals = _normals;
+}

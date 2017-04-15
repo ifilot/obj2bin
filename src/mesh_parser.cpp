@@ -21,19 +21,23 @@
 
 #include "mesh_parser.h"
 
-Mesh* MeshParser::read_obj(const std::string& filename, Mesh* mesh) {
+MeshBase* MeshParser::read_obj(const std::string& filename) {
     std::ifstream f(filename);
     if(f.is_open()) {
 
         // set regex patterns
         static const boost::regex v_line("v\\s+([0-9.-]+)\\s+([0-9.-]+)\\s+([0-9.-]+).*");
+        static const boost::regex vt_line("vt\\s+([0-9.-]+)\\s+([0-9.-]+).*");
         static const boost::regex vn_line("vn\\s+([0-9.-]+)\\s+([0-9.-]+)\\s+([0-9.-]+).*");
-        static const boost::regex f_line("f\\s+([0-9]+)\\/\\/([0-9]+)\\s+([0-9]+)\\/\\/([0-9]+)\\s+([0-9]+)\\/\\/([0-9]+).*");
+        static const boost::regex f1_line("f\\s+([0-9]+)\\/([0-9]+)\\/([0-9]+)\\s+([0-9]+)\\/([0-9]+)\\/([0-9]+)\\s+([0-9]+)\\/([0-9]+)\\/([0-9]+).*");
+        static const boost::regex f2_line("f\\s+([0-9]+)\\/\\/([0-9]+)\\s+([0-9]+)\\/\\/([0-9]+)\\s+([0-9]+)\\/\\/([0-9]+).*");
 
         // construct holders
         std::vector<glm::vec3> positions;
+        std::vector<glm::vec2> uvs;
         std::vector<glm::vec3> normals;
         std::vector<uint32_t> position_indices;
+        std::vector<uint32_t> texture_indices;
         std::vector<uint32_t> normal_indices;
 
         // read file line-by-line
@@ -48,6 +52,12 @@ Mesh* MeshParser::read_obj(const std::string& filename, Mesh* mesh) {
                 positions.push_back(pos);
             }
 
+            if (boost::regex_match(line, what1, vt_line)) {
+                glm::vec2 uv(boost::lexical_cast<float>(what1[1]),
+                                 boost::lexical_cast<float>(what1[2]));
+                uvs.push_back(uv);
+            }
+
             if (boost::regex_match(line, what1, vn_line)) {
                 glm::vec3 normal(boost::lexical_cast<float>(what1[1]),
                                  boost::lexical_cast<float>(what1[2]),
@@ -55,7 +65,21 @@ Mesh* MeshParser::read_obj(const std::string& filename, Mesh* mesh) {
                 normals.push_back(normal);
             }
 
-            if (boost::regex_match(line, what1, f_line)) {
+            if (boost::regex_match(line, what1, f1_line)) {
+                position_indices.push_back(boost::lexical_cast<uint32_t>(what1[1]) - 1);
+                position_indices.push_back(boost::lexical_cast<uint32_t>(what1[4]) - 1);
+                position_indices.push_back(boost::lexical_cast<uint32_t>(what1[7]) - 1);
+
+                texture_indices.push_back(boost::lexical_cast<uint32_t>(what1[2]) - 1);
+                texture_indices.push_back(boost::lexical_cast<uint32_t>(what1[5]) - 1);
+                texture_indices.push_back(boost::lexical_cast<uint32_t>(what1[8]) - 1);
+
+                normal_indices.push_back(boost::lexical_cast<uint32_t>(what1[3]) - 1);
+                normal_indices.push_back(boost::lexical_cast<uint32_t>(what1[6]) - 1);
+                normal_indices.push_back(boost::lexical_cast<uint32_t>(what1[9]) - 1);
+            }
+
+            if (boost::regex_match(line, what1, f2_line)) {
                 position_indices.push_back(boost::lexical_cast<uint32_t>(what1[1]) - 1);
                 position_indices.push_back(boost::lexical_cast<uint32_t>(what1[3]) - 1);
                 position_indices.push_back(boost::lexical_cast<uint32_t>(what1[5]) - 1);
@@ -66,9 +90,19 @@ Mesh* MeshParser::read_obj(const std::string& filename, Mesh* mesh) {
             }
         }
 
-        // loop over all positions and place these into the mesh
-        for(unsigned int i=0; i<position_indices.size(); i++) {
-            mesh->add_vertex_pn(i, positions[position_indices[i]], normals[normal_indices[i]]);
+        MeshBase* mesh;
+
+        if(uvs.size() == 0) {
+            mesh = reinterpret_cast<MeshBase*>(new MeshSimple());
+            for(unsigned int i=0; i<position_indices.size(); i++) {
+                mesh->add_vertex_pn(i, positions[position_indices[i]], normals[normal_indices[i]]);
+            }
+        } else {
+            MeshUV* mesh_uv = new MeshUV();
+            for(unsigned int i=0; i<position_indices.size(); i++) {
+                mesh_uv->add_vertex_ptn(i, positions[position_indices[i]], uvs[texture_indices[i]], normals[normal_indices[i]]);
+            }
+            mesh = reinterpret_cast<MeshBase*>(mesh_uv);
         }
 
         return mesh;
@@ -81,7 +115,7 @@ Mesh* MeshParser::read_obj(const std::string& filename, Mesh* mesh) {
     }
 }
 
-void MeshParser::write_bin(const std::string& filename, const Mesh* mesh) {
+void MeshParser::write_bin(const std::string& filename, const MeshBase* mesh) {
     std::ofstream f(filename, std::ios_base::binary);
 
     if(f.good()) {
@@ -120,7 +154,7 @@ void MeshParser::write_bin(const std::string& filename, const Mesh* mesh) {
     }
 }
 
-void MeshParser::write_bz2(const std::string& filename, const Mesh* mesh) {
+void MeshParser::write_bz2(const std::string& filename, const MeshBase* mesh) {
     std::fstream f(filename, std::ios_base::binary | std::ios::out);
 
     if(f.good()) {
@@ -131,6 +165,16 @@ void MeshParser::write_bz2(const std::string& filename, const Mesh* mesh) {
         // write the number of positions
         const uint32_t nr_vertices = mesh->get_vertices().size();
         origin.write((char*)&nr_vertices, sizeof(uint32_t));
+
+        // write the number of uvs
+        if(mesh->get_type() == MeshBase::MESH_UV) {
+            const uint32_t nr_uvs = reinterpret_cast<const MeshUV*>(mesh)->get_uvs().size();
+            origin.write((char*)&nr_uvs, sizeof(uint32_t));
+        }
+        else {
+            const uint32_t nr_uvs = 0;
+            origin.write((char*)&nr_uvs, sizeof(uint32_t));
+        }
 
         // write the number of normals
         const uint32_t nr_normals = mesh->get_normals().size();
@@ -143,6 +187,13 @@ void MeshParser::write_bz2(const std::string& filename, const Mesh* mesh) {
         // write the positions
         for(const auto& pos : mesh->get_vertices()) {
             origin.write((char*)&pos, sizeof(float) * 3);
+        }
+
+        // write the uvs
+        if(mesh->get_type() == MeshBase::MESH_UV) {
+            for(const auto& uv : reinterpret_cast<const MeshUV*>(mesh)->get_uvs()) {
+                origin.write((char*)&uv, sizeof(float) * 2);
+            }
         }
 
         // write the normals
@@ -169,7 +220,7 @@ void MeshParser::write_bz2(const std::string& filename, const Mesh* mesh) {
     }
 }
 
-Mesh* MeshParser::read_bz2(const std::string& filename, Mesh* mesh) {
+MeshBase* MeshParser::read_bz2(const std::string& filename) {
     std::ifstream f(filename);
     if(f.is_open()) {
 
@@ -190,6 +241,10 @@ Mesh* MeshParser::read_bz2(const std::string& filename, Mesh* mesh) {
         decompressed.read(buffer, sizeof(uint32_t));
         const uint32_t nr_positions = *(uint32_t *)buffer;
 
+        // read nr texture_coordinates
+        decompressed.read(buffer, sizeof(uint32_t));
+        const uint32_t nr_textures = *(uint32_t *)buffer;
+
         // read nr normals
         decompressed.read(buffer, sizeof(uint32_t));
         const uint32_t nr_normals = *(uint32_t *)buffer;
@@ -199,12 +254,18 @@ Mesh* MeshParser::read_bz2(const std::string& filename, Mesh* mesh) {
         const uint32_t nr_indices = *(uint32_t *)buffer;
 
         std::vector<glm::vec3> positions;
+        std::vector<glm::vec2> uvs;
         std::vector<glm::vec3> normals;
         std::vector<uint32_t> indices;
 
         for(unsigned int i=0; i<nr_positions; i++) {
             decompressed.read(buffer, sizeof(float) * 3);
             positions.push_back(*(glm::vec3 *)buffer);
+        }
+
+        for(unsigned int i=0; i<nr_textures; i++) {
+            decompressed.read(buffer, sizeof(float) * 2);
+            uvs.push_back(*(glm::vec2 *)buffer);
         }
 
         for(unsigned int i=0; i<nr_normals; i++) {
@@ -220,7 +281,16 @@ Mesh* MeshParser::read_bz2(const std::string& filename, Mesh* mesh) {
         // delete old buffer
         delete[] buffer;
 
-        mesh->add_content(positions, normals, indices);
+        MeshBase* mesh;
+
+        if(uvs.size() == 0) {
+            mesh = reinterpret_cast<MeshBase*>(new MeshSimple());
+            mesh->add_content(positions, normals, indices);
+        } else {
+            MeshUV* mesh_uv = new MeshUV();
+            mesh_uv->add_content(positions, uvs, normals, indices);
+            mesh = reinterpret_cast<MeshBase*>(mesh_uv);
+        }
 
         return mesh;
 

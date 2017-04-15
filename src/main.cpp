@@ -23,10 +23,14 @@
 
 int main(int argc, char* argv[]) {
     MeshParser mp;
-    Mesh mesh;
-    mp.read_obj(argv[1], &mesh);
+    MeshBase* mesh = mp.read_obj(argv[1]);
 
-    mp.write_bin("test.bin", &mesh);
-    mp.write_bz2("test.bz2", &mesh);
-    mp.read_bz2("test.bz2", &mesh);
+    mp.write_bin("test.bin", mesh);
+    mp.write_bz2("test.bz2", mesh);
+    MeshBase* mesh2 = mp.read_bz2("test.bz2");
+
+    std::cout << mesh->get_type() << std::endl;
+    std::cout << mesh2->get_type() << std::endl;
+
+    delete mesh, mesh2;
 }

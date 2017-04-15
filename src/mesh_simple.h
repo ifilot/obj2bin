@@ -1,5 +1,5 @@
 /**************************************************************************
- *   mesh.cpp  --  This file is part of OBJ2BIT.                          *
+ *   mesh_base.h  --  This file is part of OBJ2BIT.                       *
  *                                                                        *
  *   Copyright (C) 2017, Ivo Filot (ivo@ivofilot.nl)                      *
  *                                                                        *
@@ -19,18 +19,18 @@
  *                                                                        *
  **************************************************************************/
 
-#include "mesh.h"
+#ifndef _MESH_SIMPLE
+#define _MESH_SIMPLE
 
-void Mesh::add_vertex_pn(unsigned int idx, const glm::vec3& pos, const glm::vec3& normal) {
-    this->indices.push_back(idx);
-    this->vertices.push_back(pos);
-    this->normals.push_back(normal);
-}
+#include "mesh_base.h"
 
-void Mesh::add_content(const std::vector<glm::vec3>& _vertices,
-                       const std::vector<glm::vec3>& _normals,
-                       const std::vector<unsigned int>& _indices) {
-    this->indices = _indices;
-    this->vertices = _vertices;
-    this->normals = _normals;
-}
+class MeshSimple : public MeshBase {
+private:
+
+public:
+    MeshSimple();
+
+private:
+};
+
+#endif //_MESH_SIMPLE

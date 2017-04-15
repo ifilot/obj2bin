@@ -1,5 +1,5 @@
 /**************************************************************************
- *   mesh.h  --  This file is part of OBJ2BIT.                            *
+ *   mesh_uv.h  --  This file is part of OBJ2BIT.                         *
  *                                                                        *
  *   Copyright (C) 2017, Ivo Filot (ivo@ivofilot.nl)                      *
  *                                                                        *
@@ -19,49 +19,30 @@
  *                                                                        *
  **************************************************************************/
 
-#ifndef _MESH_H
-#define _MESH_H
+#ifndef _MESH_UV
+#define _MESH_UV
 
-#include <vector>
+#include "mesh_base.h"
 
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
-
-class Mesh {
+class MeshUV : public MeshBase {
 private:
-    std::vector<glm::vec3> vertices;
-    std::vector<glm::vec3> normals;
-    std::vector<uint32_t> indices;
+    std::vector<glm::vec2> uvs;
 
 public:
-    Mesh() {}
+    MeshUV();
 
-    void add_vertex_pn(uint32_t idx, const glm::vec3& pos, const glm::vec3& normal);
+    virtual void add_vertex_ptn(uint32_t idx, const glm::vec3& pos, const glm::vec2& uv, const glm::vec3& normal);
 
-    void add_content(const std::vector<glm::vec3>& _vertices,
-                     const std::vector<glm::vec3>& _normals,
-                     const std::vector<unsigned int>& _indices);
+    virtual void add_content(const std::vector<glm::vec3>& _vertices,
+                             const std::vector<glm::vec2>& _uvs,
+                             const std::vector<glm::vec3>& _normals,
+                             const std::vector<unsigned int>& _indices);
 
-    inline unsigned int get_nr_vertices() const {
-        return this->vertices.size();
+    inline const std::vector<glm::vec2>& get_uvs() const {
+        return this->uvs;
     }
-
-    inline const std::vector<glm::vec3>& get_vertices() const {
-        return this->vertices;
-    }
-
-    inline const std::vector<glm::vec3>& get_normals() const {
-        return this->normals;
-    }
-
-    inline const std::vector<uint32_t>& get_indices() const {
-        return this->indices;
-    }
-
-    ~Mesh() {}
 
 private:
 };
 
-#endif //_MESH_H
+#endif //_MESH_UV
