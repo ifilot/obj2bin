@@ -56,6 +56,7 @@ set (BOOST_ALL_DYN_LINK OFF)
 find_package(PkgConfig REQUIRED)
 find_package(BZip2 REQUIRED)
 find_package(Boost COMPONENTS chrono regex iostreams system serialization filesystem log thread REQUIRED)
+pkg_check_modules(TCLAP tclap REQUIRED)
 
 # Set include folders
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}

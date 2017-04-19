@@ -19,18 +19,53 @@
  *                                                                        *
  **************************************************************************/
 
+#include <tclap/CmdLine.h>
+
 #include "mesh_parser.h"
 
 int main(int argc, char* argv[]) {
-    MeshParser mp;
-    MeshBase* mesh = mp.read_obj(argv[1]);
 
-    mp.write_bin("test.bin", mesh);
-    mp.write_bz2("test.bz2", mesh);
-    MeshBase* mesh2 = mp.read_bz2("test.bz2");
+    std::cout << "------------------------------------------"   << std::endl;
+    std::cout << "OBJ2BIN (C) 2017" << std::endl;
+    std::cout << "Ivo Filot <ivo@ivofilot.nl>"  << std::endl;
+    std::cout << "------------------------------------------"  << std::endl;
 
-    std::cout << mesh->get_type() << std::endl;
-    std::cout << mesh2->get_type() << std::endl;
+    try {
+        TCLAP::CmdLine cmd("Converts Blender OBJ file to a binary file.", ' ', "1.0");
 
-    delete mesh, mesh2;
+        //**************************************
+        // declare values to be parsed
+        //**************************************
+
+        // input file
+        TCLAP::ValueArg<std::string> arg_input_filename("i","input","Input file (i.e. sphere.obj)",true,"__NONE__","filename");
+        cmd.add(arg_input_filename);
+
+        TCLAP::ValueArg<std::string> arg_output_filename("o","output","Output file (i.e. sphere.mesh)",true,"__NONE__","filename");
+        cmd.add(arg_output_filename);
+
+        cmd.parse(argc, argv);
+
+        MeshParser mp;
+
+        std::cout << "Opening: " << arg_input_filename.getValue() << std::endl;
+
+        MeshBase* mesh = mp.read_obj(arg_input_filename.getValue());
+
+        std::cout << "Reading " << mesh->get_nr_vertices() << " vertices..." << std::endl;
+
+        std::cout << "Writing to: " << arg_input_filename.getValue() << std::endl;
+
+        mp.write_bz2(arg_output_filename.getValue(), mesh);
+
+        std::cout << "------------------------------------------"  << std::endl;
+        std::cout << "Done" << std::endl;
+
+        delete mesh;
+
+    } catch (TCLAP::ArgException &e) {
+        std::cerr << "error: " << e.error() <<
+                     " for arg " << e.argId() << std::endl;
+        return -1;
+    }
 }
