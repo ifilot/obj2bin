@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
 
         std::cout << "Reading " << mesh->get_nr_vertices() << " vertices..." << std::endl;
 
-        std::cout << "Writing to: " << arg_input_filename.getValue() << std::endl;
+        std::cout << "Writing to: " << arg_output_filename.getValue() << std::endl;
 
         mp.write_bz2(arg_output_filename.getValue(), mesh);
 
